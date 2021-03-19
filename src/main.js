@@ -13,7 +13,7 @@ async function main() {
 	const server = express();
 	server.use(express.json());
   server.use('/', baseRouter.router);
-	server.listen(8080, () => {
+	server.listen(process.env.PORT, () => {
 		console.log('Ready for the action!...');
 	})
 }
