@@ -1,56 +1,46 @@
-const Sequelize = require('sequelize');
+const mongoose = require('mongoose');
 const { createModel } = require('./models/users');
 
 let _database = null;
 
-const users = [
-    {
-        username: 'daniela',
-        password: 'secreto'
-    },
-    {
-        username: 'ximena',
-        password: 'mipassword'
-    },
-    {
-        username: 'diego',
-        password: 'diego123'
-    },
-    {
-        username: 'yeison',
-        password: '0627'
-    }
-]
+const models = {};
 
 async function validarUsuario(username, password) {
-  const sequelize = getDatabaseConnection();
-  const User = sequelize.models.User;
+  const User = models.User;
   const user = await User.findOne({
-    where: {
-      username,
-      password
-    }
+    username,
+    password
   });
   return user;
 }
 
-async function connect(params) {
-  const sequelize = new Sequelize({
-    dialect: 'mariadb',
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    username: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE
+async function createUser(username, password) {
+  const user = new models.User({
+    username, password
   });
-  await sequelize.authenticate();
-  console.log('Connection has been established successfully.');
-  const Users = createModel(sequelize);
-  await Users.sync();
-  await sequelize.sync();
-  console.log('DB Object created...');
-  _database = sequelize;
-  return sequelize;
+  const saved = await user.save();
+  return saved;
+}
+
+async function connect(params) {
+  const host = process.env.DB_HOST;
+  const port = process.env.DB_PORT;
+  const username = process.env.DB_USERNAME;
+  const password = process.env.DB_PASSWORD;
+  const database = process.env.DB_DATABASE;
+  const URL = `mongodb+srv://${username}:${password}@${host}/${database}?retryWrites=true&w=majority`;
+  const connection = mongoose.connect(URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  });
+  const db = mongoose.connection;
+  db.on('error', console.error.bind(console, 'connection error:'));
+  db.once('open', function() {
+    console.log('Connection has been established successfully.');
+  });
+  models.User = createModel();
+  _database = connection;
+  return connection;
 }
 
 function getDatabaseConnection() {
@@ -59,6 +49,8 @@ function getDatabaseConnection() {
 
 module.exports = {
   validarUsuario,
+  createUser,
   connect,
-  getDatabaseConnection
+  getDatabaseConnection,
+  models
 };

@@ -1,19 +1,11 @@
-const { DataTypes } = require("sequelize");
+const mongoose = require('mongoose');
 
-function createModel(sequelize) {
-    const User = sequelize.define('User', {
-        // Model attributes are defined here
-        username: {
-            type: DataTypes.STRING,
-            allowNull: false
-        },
-        password: {
-            type: DataTypes.STRING(100)
-            // allowNull defaults to true
-        }
-    }, {
-        // Other model options go here
+function createModel() {
+    const userSchema = new mongoose.Schema({
+        username: { type: String, required: true },
+        password: { type: String, required: true }
     });
+    const User = mongoose.model('Users', userSchema);
     return User;
 }
 
